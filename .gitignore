@@ -1,2 +1,3 @@
 .env
 places_api_cache.*
+__pycache__

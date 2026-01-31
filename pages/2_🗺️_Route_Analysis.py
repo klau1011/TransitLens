@@ -10,7 +10,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from utils import load_data, clean_raw_data, get_session_data
 
 st.set_page_config(
-    page_title="Route Analysis",
+    page_title="Route Analysis | TransitLens",
     page_icon="🗺️",
     layout="wide"
 )

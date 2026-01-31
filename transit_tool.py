@@ -7,14 +7,14 @@ from utils import load_data, clean_raw_data, set_session_data, get_session_data
 
 # Streamlit Config and Headers
 st.set_page_config(
-    page_title="Transit Dashboard",
+    page_title="TransitLens",
     page_icon="🚆",
     layout="wide"
 )
 
-st.title("🚆 Transit Data Dashboard")
+st.title("🚆 TransitLens")
 st.markdown("""
-Welcome to your **Metrolinx Transit Insights** dashboard! Upload your Presto card CSV data 
+Welcome to **TransitLens**! Upload your Presto card CSV data 
 to visualize your transit patterns, spending, and travel habits.
 
 > Navigate through the pages in the sidebar for detailed insights.
@@ -56,7 +56,6 @@ def get_tap_data(df):
     unique_days_travelled = df["Date"].dt.date.nunique()
     df = df.groupby(pd.Grouper(key="Date", freq="M"))["Amount_Clean"].count()
     fig2 = px.bar(df, title="Monthly Tap Frequency")
-    return fig2, unique_days_travelled
     return fig2, unique_days_travelled
 
 # Sidebar for file upload
