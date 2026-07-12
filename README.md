@@ -13,6 +13,8 @@ A Streamlit web app that transforms Presto card CSV data into interactive visual
 
 **Get your data:** Export CSV from [Presto Transit Usage Report](https://www.prestocard.ca/en/my-products/transit-usage-report)
 
+Expected columns: `Date, TransitAgency, Location, Type, Amount` (the older `Transit Agency` header also works). Card top-up rows (`Epurse Load`) are excluded from all trip and spending stats automatically.
+
 **Run locally:**
 ```bash
 pip install -r requirements.txt

@@ -3,7 +3,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import streamlit as st
 import datetime
-from utils import load_data, clean_raw_data, set_session_data, get_session_data
+from utils import load_data, clean_raw_data, set_session_data
 
 # Streamlit Config and Headers
 st.set_page_config(
@@ -42,20 +42,14 @@ def map_frequent_stops(df):
 
 @st.cache_data
 def get_spendings_data(df):
-    df = df.copy()
-    df["Date"] = pd.to_datetime(df["Date"])
-    df.Date = df.Date - pd.DateOffset(months=1)
-    out = df.set_index("Date").groupby(pd.Grouper(freq="M"))["Amount_Clean"].sum()
+    out = df.groupby("Month")["Amount_Clean"].sum()
     num_amount_spent = df["Amount_Clean"].sum()
     return out, num_amount_spent
 
 @st.cache_data
 def get_tap_data(df):
-    df = df.copy()
-    df["Date"] = pd.to_datetime(df["Date"])
-    unique_days_travelled = df["Date"].dt.date.nunique()
-    df = df.groupby(pd.Grouper(key="Date", freq="M"))["Amount_Clean"].count()
-    fig2 = px.bar(df, title="Monthly Tap Frequency")
+    unique_days_travelled = df["Date_Only"].nunique()
+    fig2 = px.bar(df.groupby("Month").size(), title="Monthly Tap Frequency")
     return fig2, unique_days_travelled
 
 # Sidebar for file upload
@@ -90,7 +84,7 @@ try:
     # Main visualizations - Most Visited Stops
     st.subheader("🗺️ Most Visited Stops")
     fig, number_unique_stops = map_frequent_stops(df)
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width="stretch")
 
     st.markdown("---")
 
@@ -105,7 +99,7 @@ try:
             yaxis_title="Amount Spent ($)", 
             showlegend=False
         )
-        st.plotly_chart(amountFig, use_container_width=True)
+        st.plotly_chart(amountFig, width="stretch")
     
     with right_col2:
         fig2, unique_days_travelled = get_tap_data(df)
@@ -114,29 +108,8 @@ try:
             yaxis_title="Tap Count", 
             showlegend=False
         )
-        st.plotly_chart(fig2, use_container_width=True)
-
-    st.markdown("---")
-    
-    # Transit Agency breakdown
-    st.subheader("� Spending by Transit Agency")
-    agency_df = df.copy()
-    agency_spending = agency_df.groupby("Transit Agency")["Amount_Clean"].agg("sum").sort_values(ascending=True)
-    agencyFig = px.bar(
-        agency_spending, 
-        orientation='h',
-        title="Total Spending by Transit Agency",
-        color=agency_spending.values,
-        color_continuous_scale="Viridis"
-    )
-    agencyFig.update_layout(
-        xaxis_title="Amount ($)", 
-        yaxis_title="Transit Agency", 
-        showlegend=False,
-        coloraxis_showscale=False
-    )
-    st.plotly_chart(agencyFig, use_container_width=True)
+        st.plotly_chart(fig2, width="stretch")
 
 except Exception as e:
     st.error(f"An error occurred: {e}")
-    st.info("Please make sure your CSV file has the correct format with columns: Date, Transit Agency, Location, Type, Amount")
+    st.info("Please make sure your CSV file has the correct format with columns: Date, TransitAgency, Location, Type, Amount")

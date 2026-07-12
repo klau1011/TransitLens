@@ -7,7 +7,7 @@ import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import load_data, clean_raw_data, get_session_data
+from utils import get_data
 
 st.set_page_config(
     page_title="Spending Insights | TransitLens",
@@ -22,15 +22,7 @@ Deep dive into your transit spending patterns. See where your money goes and ide
 ---
 """)
 
-# Try to get data from session state or load fresh
-df = get_session_data()
-if df is None:
-    st.sidebar.header("📁 Data Upload")
-    uploaded_csv = st.sidebar.file_uploader("Upload your Presto CSV:", type="csv")
-    if not uploaded_csv:
-        uploaded_csv = "transit_usage.csv"
-    df = load_data(uploaded_csv)
-    df = clean_raw_data(df)
+df = get_data()
 
 try:
     # Key spending metrics
@@ -81,7 +73,7 @@ try:
         xaxis_title="Month",
         yaxis_title="Amount Spent ($)"
     )
-    st.plotly_chart(fig_monthly, use_container_width=True)
+    st.plotly_chart(fig_monthly, width="stretch")
     
     # Month with highest/lowest spending
     col1, col2 = st.columns(2)
@@ -106,7 +98,7 @@ try:
             title="Spending Distribution by Agency",
             color_discrete_sequence=px.colors.qualitative.Set2
         )
-        st.plotly_chart(fig_agency, use_container_width=True)
+        st.plotly_chart(fig_agency, width="stretch")
     
     with col2:
         # Average fare by agency
@@ -125,32 +117,10 @@ try:
             yaxis_title="Transit Agency",
             coloraxis_showscale=False
         )
-        st.plotly_chart(fig_avg, use_container_width=True)
+        st.plotly_chart(fig_avg, width="stretch")
 
     st.markdown("---")
-    
-    # Daily spending pattern
-    st.subheader("📅 Spending by Day of Week")
-    
-    day_order = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-    day_spending = df.groupby("Day_of_Week")["Amount_Clean"].sum().reindex(day_order)
-    
-    fig_day = px.bar(
-        x=day_spending.index,
-        y=day_spending.values,
-        title="Total Spending by Day of Week",
-        color=day_spending.values,
-        color_continuous_scale="Sunset"
-    )
-    fig_day.update_layout(
-        xaxis_title="Day of Week",
-        yaxis_title="Total Spent ($)",
-        coloraxis_showscale=False
-    )
-    st.plotly_chart(fig_day, use_container_width=True)
 
-    st.markdown("---")
-    
     # Spending by location
     st.subheader("📍 Top Spending Locations")
     
@@ -170,28 +140,31 @@ try:
         coloraxis_showscale=False,
         yaxis={'categoryorder': 'total ascending'}
     )
-    st.plotly_chart(fig_loc, use_container_width=True)
+    st.plotly_chart(fig_loc, width="stretch")
 
     st.markdown("---")
     
     # Cost per trip analysis
     st.subheader("🎫 Fare Analysis")
-    
-    # Histogram of fare amounts
+
     fare_data = df[df["Amount_Clean"] > 0]["Amount_Clean"]
-    
-    fig_hist = px.histogram(
-        fare_data,
-        nbins=20,
-        title="Distribution of Fare Amounts",
-        color_discrete_sequence=["#3498db"]
+
+    # Average fare per month - shows fare increases and mode-mix shifts
+    monthly_avg_fare = df.groupby("Month")["Amount_Clean"].mean()
+
+    fig_avg_fare = px.line(
+        x=monthly_avg_fare.index,
+        y=monthly_avg_fare.values,
+        title="Average Fare per Month",
+        markers=True
     )
-    fig_hist.update_layout(
-        xaxis_title="Fare Amount ($)",
-        yaxis_title="Frequency"
+    fig_avg_fare.update_layout(
+        xaxis_title="Month",
+        yaxis_title="Average Fare ($)"
     )
-    st.plotly_chart(fig_hist, use_container_width=True)
-    
+    fig_avg_fare.update_traces(line_color="#9b59b6", line_width=3, marker_size=10)
+    st.plotly_chart(fig_avg_fare, width="stretch")
+
     # Fare statistics
     col1, col2, col3 = st.columns(3)
     col1.metric("Most Common Fare", f"${fare_data.mode().iloc[0]:.2f}" if not fare_data.mode().empty else "N/A")
@@ -217,7 +190,7 @@ try:
         xaxis_title="Date",
         yaxis_title="Cumulative Amount ($)"
     )
-    st.plotly_chart(fig_cumulative, use_container_width=True)
+    st.plotly_chart(fig_cumulative, width="stretch")
     
     # Projection
     if months_covered > 0:

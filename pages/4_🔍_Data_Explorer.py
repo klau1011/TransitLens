@@ -6,7 +6,7 @@ import os
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from utils import load_data, clean_raw_data, get_session_data
+from utils import get_data
 
 st.set_page_config(
     page_title="Data Explorer | TransitLens",
@@ -21,15 +21,7 @@ Explore and filter your raw transit data. Search for specific trips, filter by d
 ---
 """)
 
-# Try to get data from session state or load fresh
-df = get_session_data()
-if df is None:
-    st.sidebar.header("📁 Data Upload")
-    uploaded_csv = st.sidebar.file_uploader("Upload your Presto CSV:", type="csv")
-    if not uploaded_csv:
-        uploaded_csv = "transit_usage.csv"
-    df = load_data(uploaded_csv)
-    df = clean_raw_data(df)
+df = get_data()
 
 try:
     st.subheader("🎛️ Filters")
@@ -101,7 +93,7 @@ try:
         display_df["Date"] = display_df["Date"].dt.strftime("%Y-%m-%d %H:%M")
         display_df = display_df.sort_values("Date", ascending=False)
         
-        st.dataframe(display_df, use_container_width=True, height=500)
+        st.dataframe(display_df, width="stretch", height=500)
         
         # Download button
         csv = display_df.to_csv(index=False)
@@ -132,7 +124,7 @@ try:
             xaxis_title="Date",
             yaxis_title="Number of Trips"
         )
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width="stretch")
         
         # Calendar heatmap-style view by week
         st.subheader("📆 Weekly Activity")
@@ -153,7 +145,7 @@ try:
             yaxis_title="Number of Trips",
             coloraxis_showscale=False
         )
-        st.plotly_chart(fig_weekly, use_container_width=True)
+        st.plotly_chart(fig_weekly, width="stretch")
     
     else:  # Summary View
         st.subheader("📈 Data Summary")
